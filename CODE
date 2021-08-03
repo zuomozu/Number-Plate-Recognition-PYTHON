@@ -1,217 +1,192 @@
-    import easyocr # for img to text
-    import re
-    import unicodedata
-    import cv2 #for computer vision
-    import math
-    import imutils
-    import numpy as np
-    from matplotlib import pyplot as plt
-    from datetime import datetime
-    import os
-    from os import listdir
-    from PIL import Image
-
-    
-    #path for saving images
-    basepath = "C:/Users/zuhai/ENTRIES/"
-
-    q=0
-    cap = cv2.VideoCapture("CLIIP.mp4") #video
-    
-    #class for tracking Numbel PLate
-    class EuclideanDistTracker:
-        def __init__(self):
-            # Store the center positions of the objects
-            self.center_points = {}
-            # Keep the count of the IDs
-            # each time a new object id detected, the count will increase by one
-            self.id_count = 0
+#libraries 
+import easyocr # for img to text
+import re
+import unicodedata
+import cv2 #for computer vision
+import math
+import imutils
+import numpy as np
+from matplotlib import pyplot as plt
+from datetime import datetime
+import os
+from os import listdir
 
 
-        def update(self, objects_rect):
-            # Objects boxes and ids
-            objects_bbs_ids = []
+#path for saving images
+basepath = "C:/Users/zuhai/ENTRIES/"
+q=0
+cap = cv2.VideoCapture("CLIIP.mp4") #video
 
-            # Get center point of new object
-            for rect in objects_rect:
-                x, y, w, h = rect
-                cx = (x + x + w) // 2
-                cy = (y + y + h) // 2
-
-                # Find out if that object was detected already
-                same_object_detected = False
-                for id, pt in self.center_points.items():
-                    dist = math.hypot(cx - pt[0], cy - pt[1])
-
-                    if dist < 25:
-                        self.center_points[id] = (cx, cy)
-                        #print(self.center_points)
-                        objects_bbs_ids.append([x, y, w, h, id])
-                        same_object_detected = True
-                        break
-
-                # New object is detected we assign the ID to that object
-                if same_object_detected is False:
-                    self.center_points[self.id_count] = (cx, cy)
-                    objects_bbs_ids.append([x, y, w, h, self.id_count])
-                    self.id_count += 1
-
-            # Clean the dictionary by center points to remove IDS not used anymore
-            new_center_points = {}
-            for obj_bb_id in objects_bbs_ids:
-                _, _, _, _, object_id = obj_bb_id
-                center = self.center_points[object_id]
-                new_center_points[object_id] = center
-
-            # Update dictionary with IDs not used removed
-            self.center_points = new_center_points.copy()
-            return objects_bbs_ids
-
-    #function for img-text using OCR   
-    def OCR(img):
-        reader = easyocr.Reader(['en']) # defining object
-        result = reader.readtext(img) #finding text
-        print(result) #all the text in the img
-        if not result:
-            print("HIB")
-            
-            Number=None
-        else:
-            s_array = [sublist[1] for sublist in result] #extacting useful part /can be directly extracted
-            print(s_array)
-            for z in s_array:
-                if(len(z)>4):
-                    Number=re.findall('\d+', z )
-                else :
-                    Number=z
-                if(len(z)==5):
-                    if(z.isdigit()==1):
-                        break
-
-            
-        try:
-
-            Number = [character for character in Number if character.isalnum()] #removing special characters 
-            Number = "".join(Number) 
-        except Exception:
-            pass   
+#class for tracking Numbel PLate
+class EuclideanDistTracker:
+    def __init__(self):
+        # Store the center positions of the objects
+        self.center_points = {}
+        # Keep the count of the IDs
+        # each time a new object id detected, the count will increase by one
+        self.id_count = 0
+    def update(self, objects_rect):
+        # Objects boxes and ids
+        objects_bbs_ids = []
+        # Get center point of new object
+        for rect in objects_rect:
+            x, y, w, h = rect
+            cx = (x + x + w) // 2
+            cy = (y + y + h) // 2
+            # Find out if that object was detected already
+            same_object_detected = False
+            for id, pt in self.center_points.items():
+                dist = math.hypot(cx - pt[0], cy - pt[1])
+                if dist < 25:
+                    self.center_points[id] = (cx, cy)
+                    #print(self.center_points)
+                    objects_bbs_ids.append([x, y, w, h, id])
+                    same_object_detected = True
+                    break
+            # New object is detected we assign the ID to that object
+            if same_object_detected is False:
+                self.center_points[self.id_count] = (cx, cy)
+                objects_bbs_ids.append([x, y, w, h, self.id_count])
+                self.id_count += 1
+        # Clean the dictionary by center points to remove IDS not used anymore
+        new_center_points = {}
+        for obj_bb_id in objects_bbs_ids:
+            _, _, _, _, object_id = obj_bb_id
+            center = self.center_points[object_id]
+            new_center_points[object_id] = center
+        # Update dictionary with IDs not used removed
+        self.center_points = new_center_points.copy()
+        return objects_bbs_ids
+#function for img-text using OCR   
+def OCR(img):
+    reader = easyocr.Reader(['en']) # defining object
+    result = reader.readtext(img) #finding text
+    print(result) #all the text in the img
+    if not result:
+        Number=None
+    else:
+        s_array = [sublist[1] for sublist in result] #extacting useful part /can be directly extracted
+        print(s_array)
+        for z in s_array:
+            if(len(z)>4):
+                Number=re.findall('\d+', z )
+            else :
+                Number=z
+            if(len(z)==5):
+                if(z.isdigit()==1):
+                    break
         
-       
-    
-        return (Number , c, e)
-    #adding text in the video
     try:
-        cv2.putText(frame, text, (10,30), cv2.FONT_HERSHEY_PLAIN, 2, txtcol, 2)
+        Number = [character for character in Number if character.isalnum()] #removing special characters 
+        Number = "".join(Number) 
     except Exception:
-        pass
+        pass   
+    
+   
+
+    return (Number , c, e)
+#adding text in the video
+try:
+    cv2.putText(frame, text, (10,30), cv2.FONT_HERSHEY_PLAIN, 2, txtcol, 2)
+except Exception:
+    pass
+    
+tracker = EuclideanDistTracker()
+# Object detection from Stable camera
+object_detector = cv2.createBackgroundSubtractorMOG2(history=150, varThreshold=30)
+i=1
+
+
+location = None #co-ordinates of Number PLate
+date = 0
+t=5
+text ="BY-ZUOMOZU"
+txtcol = list(np.random.random(size=3) * 256)# for different text colors 
+try:
+    while(1):
+        ret, frame = cap.read() #read frames
+        # Extract Region of interest
+        roi = frame[160:790,70:780]
         
-    tracker = EuclideanDistTracker()
-
-    # Object detection from Stable camera
-    object_detector = cv2.createBackgroundSubtractorMOG2(history=150, varThreshold=30)
-    i=1
-    
-    
-    location = None #co-ordinates of Number PLate
-    date = 0
-    t=5
-    text ="BY-ZUOMOZU"
-    txtcol = list(np.random.random(size=3) * 256)# for different text colors 
-    try:
-        while(1):
-            ret, frame = cap.read() #read frames
-
-            # Extract Region of interest
-            roi = frame[160:790,70:780]
+        gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #gray filter
+        bfilter = cv2.bilateralFilter(gray, 13, 15, 15) #noice reduction
+        edge = cv2.Canny(bfilter, 50,150 ) #edge detection
+        
+        keypoints= cv2.findContours(edge, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
+        contours= imutils.grab_contours(keypoints)
+        contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
+        detections = []
+        #finding location for all detections 
+        for contour in contours:
+            approx = cv2.approxPolyDP(contour, 10, True)
+            area = cv2.contourArea(contour)   
+            #Finding Contours
+            if len(approx) == 4 :
             
-            gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY) #gray filter
-            bfilter = cv2.bilateralFilter(gray, 13, 15, 15) #noice reduction
-
-            edge = cv2.Canny(bfilter, 50,150 ) #edge detection
-            
-            keypoints= cv2.findContours(edge, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) 
-            contours= imutils.grab_contours(keypoints)
-            contours = sorted(contours, key=cv2.contourArea, reverse=True)[:5]
-            detections = []
-
-            #finding location for all detections 
-            for contour in contours:
-                approx = cv2.approxPolyDP(contour, 10, True)
-                area = cv2.contourArea(contour)   
-                #Finding Contours
-                if len(approx) == 4 :
-                
-                            x, y, w, h = cv2.boundingRect(contour)
-                            #conditions or limits
-                            if area > 3200  :
+                        x, y, w, h = cv2.boundingRect(contour)
+                        #conditions or limits
+                        if area > 3200  :
+                            
+                            if area < 4365  :
                                 
-                                if area < 4365  :
+                                if  ((float(w)/h) >= 3.0):
                                     
-                                    if  ((float(w)/h) >= 3.0):
+                                    if  ((float(w)/h) <= 4.4):
                                         
-                                        if  ((float(w)/h) <= 4.4):
-                                            
-                                            location = approx
-                                            date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                                            detections.append([x, y, w, h])
-                                            break
-            boxes_ids = tracker.update(detections)
-
-            
-            
-            
-            #scanning each NP
-            for box_id in boxes_ids:
-                x, y, w, h, id = box_id 
-               
-                
-                
-                cv2.imwrite(basepath+"\ENTRY"+str(id+1)+".jpg", frame) #storing the entry images
-                   
-                #extact  the NP
-                #Applying Mask
-                mask = np.zeros(gray.shape, np.uint8) 
-                new_image = cv2.drawContours(mask, [location], 0,255, -1)
-                new_image = cv2.bitwise_and(roi, roi, mask=mask)
-                (xa,ya) = np.where(mask==255)
-                (x1, y1) = (np.min(xa), np.min(ya))
-                (x2, y2) = (np.max(xa), np.max(ya))
-                #cropping NP
-                cropped_image = roi[x1:x2, y1:y2]
-                cv2.imwrite(str(id+1)+"TRZ.jpg",cropped_image) # Number plate image
-                i =id+1 #fot storing it as 0+1
-                
-                NumPLT=cv2.imread('%dTRZ.jpg' %i) #taking the save image
-                img = cv2.bitwise_not(NumPLT) #applying bitwise not operation to turn img into negative
-
-                print(id , area , " ",float(w)/h)
-                if (q==id):# reducing the number of scans
-                    print("NUMBER PLATE DETECTED")
-                    try:
-                        Num , code, emi=OCR(img) #calling the OCR FUNCTION 
-                        print("NUMBER  : " +Num) #NUMBER
-                        print("CODE    : " +code) #CODE
-                        print("EMIRATE : " +emi) #state
-                        text1 = code+"-"+ Num+"-"+emi #combining the details
-                    except Exception: #ignoring errors
-                        print("Number Plate NOT detected")
-                        pass
-                    q+=1
-                else:
-                    print("PASS")
-
-                    
-
-            cv2.imshow("CAMIERA-1", frame) #displaying the footage
-
-            
-
-            key = cv2.waitKey(15)
-            
-            if key == 27:
-                break
+                                        location = approx
+                                        date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                        detections.append([x, y, w, h])
+                                        break
+        boxes_ids = tracker.update(detections)
         
-    except Exception:
-        print("EX3")
-        pass
+        
+        
+        #scanning each NP
+        for box_id in boxes_ids:
+            x, y, w, h, id = box_id 
+           
+            
+            
+            cv2.imwrite(basepath+"\ENTRY"+str(id+1)+".jpg", frame) #storing the entry images
+               
+            #extact  the NP
+            #Applying Mask
+            mask = np.zeros(gray.shape, np.uint8) 
+            new_image = cv2.drawContours(mask, [location], 0,255, -1)
+            new_image = cv2.bitwise_and(roi, roi, mask=mask)
+            (xa,ya) = np.where(mask==255)
+            (x1, y1) = (np.min(xa), np.min(ya))
+            (x2, y2) = (np.max(xa), np.max(ya))
+            #cropping NP
+            cropped_image = roi[x1:x2, y1:y2]
+            cv2.imwrite(str(id+1)+"TRZ.jpg",cropped_image) # Number plate image
+            i =id+1 #fot storing it as 0+1
+            
+            NumPLT=cv2.imread('%dTRZ.jpg' %i) #taking the save image
+            img = cv2.bitwise_not(NumPLT) #applying bitwise not operation to turn img into negative
+            if (q==id):# reducing the number of scans
+                print("NUMBER PLATE DETECTED")
+                try:
+                    Num , code, emi=OCR(img) #calling the OCR FUNCTION 
+                    print("NUMBER  : " +Num) #NUMBER
+                    print("CODE    : " +code) #CODE
+                    print("EMIRATE : " +emi) #state
+                    text1 = code+"-"+ Num+"-"+emi #combining the details
+                except Exception: #ignoring errors
+                    print("Number Plate NOT detected")
+                    pass
+                q+=1
+            else:
+                print("PASS")
                 
+        cv2.imshow("CAMIERA-1", frame) #displaying the footage
+        
+        key = cv2.waitKey(15)
+        
+        if key == 27:
+            break
+    
+except Exception:
+    print("EX3")
+    pass
+            
