@@ -3,7 +3,7 @@ Python code for Detection and Recognition of Number Plates from parking lot came
 
 # Introduction
 
-This is a project that captures car number plates from a parking video and stores them in a database. The project uses the CV2 and EasyOCR libraries for image processing and text extraction respectively. The Pandas library is used for storing the data in a database. The project is written in Python.
+This is a project that captures car number plates from a parking video and stores them in a database. The project uses the CV2 and EasyOCR libraries for image processing and text extraction respectively. The project is written in Python.
 
 # Requirements
 
@@ -25,4 +25,11 @@ The program will extract the car number plates from the video and store them in 
 Contributing
 
 If you want to contribute to this project, you can do so by submitting a pull request or opening an issue on the project's Github page.
+
+# Flow
+
+1. We open the video from our library and convert into frames, so we can loop throug it.
+2. We use OpenCV concepts (gradient) to find rectangle contours for the number plate from a particular region.
+3. After Finding the number plate we mask it and use easyOCR to extract the text from it.
+4.
 
