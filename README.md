@@ -1,6 +1,3 @@
-Sure, here’s a more detailed README that dives into the specifics of the code and its functionality.
-
----
 
 # License Plate Recognition System
 
