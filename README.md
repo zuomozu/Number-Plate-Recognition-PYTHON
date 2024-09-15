@@ -36,13 +36,6 @@ pip install easyocr opencv-python numpy matplotlib imutils
 
 2. **Video File**: Ensure `CLIIP.mp4` exists in the project directory or update the path to point to your video file.
 
-## Usage
-
-Run the `main.py` script to start processing the video. The script will detect and recognize license plates, saving images and printing detected information to the console.
-
-```
-python main.py
-```
 
 ### Output
 
